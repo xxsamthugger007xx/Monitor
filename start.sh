@@ -120,6 +120,23 @@ if [ -z "${GF_ADMIN_PASSWORD:-}" ]; then
   GF_ADMIN_PASSWORD="changeme-now"
 fi
 
+# GF_SECURITY_ADMIN_PASSWORD (set below, when starting the server) only ever
+# takes effect the very first time Grafana creates its database — once
+# data/grafana/data/grafana.db exists, the admin password already living in
+# it wins, and simply changing this secret later does nothing. Force it into
+# sync on every boot instead, via the same CLI reset used for a first-time
+# fix, so a stale password can never survive a restart/redeploy again. Must
+# run before the server below starts (concurrent access to the same SQLite
+# file can wedge the running server on `database is locked` contention). On
+# a genuinely fresh install there's no admin row yet to reset — that's fine,
+# the server's own first-boot bootstrap creates it with this same password.
+GF_PATHS_DATA="$DATA_DIR/grafana/data" \
+GF_PATHS_LOGS="$DATA_DIR/grafana/logs" \
+GF_PATHS_PLUGINS="$DATA_DIR/grafana/plugins" \
+GF_PATHS_PROVISIONING="$DATA_DIR/grafana-provisioning" \
+  "$GRAFANA_DIR/bin/grafana" cli --homepath "$GRAFANA_DIR" admin reset-admin-password "$GF_ADMIN_PASSWORD" \
+  > /dev/null 2>&1 || true
+
 # ---------------------------------------------------------------------------
 # Start services (background), logs to ./logs
 # ---------------------------------------------------------------------------
