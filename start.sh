@@ -24,6 +24,9 @@ DOWNLOAD_TMP_ROOT="$ROOT_DIR/.download-tmp"
 mkdir -p "$DATA_DIR/prometheus" "$DATA_DIR/loki/chunks" "$DATA_DIR/loki/rules" \
          "$DATA_DIR/loki/compactor" "$DATA_DIR/grafana" \
          "$DATA_DIR/grafana-provisioning/datasources" \
+         "$DATA_DIR/grafana-provisioning/dashboards" \
+         "$DATA_DIR/grafana-provisioning/alerting" \
+         "$DATA_DIR/grafana-provisioning/plugins" \
          "$BIN_DIR" "$ROOT_DIR/logs" "$DOWNLOAD_TMP_ROOT"
 
 ARCH="$(uname -m)"
@@ -108,6 +111,16 @@ rmdir "$DOWNLOAD_TMP_ROOT" 2>/dev/null || true
 # expected location on every start).
 # ---------------------------------------------------------------------------
 cp "$CONFIG_DIR/grafana-datasources.yml" "$DATA_DIR/grafana-provisioning/datasources/grafana-datasources.yml"
+
+# ---------------------------------------------------------------------------
+# Wire up the pre-built dashboard the same way — the provider YAML needs the
+# real absolute path to the dashboard JSON, which differs per deployment, so
+# substitute it into the copy rather than hardcoding it in git.
+# ---------------------------------------------------------------------------
+sed "s#__DASHBOARDS_PATH__#$DATA_DIR/grafana-provisioning/dashboards#" \
+  "$CONFIG_DIR/grafana-dashboards.yml" \
+  > "$DATA_DIR/grafana-provisioning/dashboards/grafana-dashboards.yml"
+cp "$CONFIG_DIR/dashboards/mii-overview.json" "$DATA_DIR/grafana-provisioning/dashboards/mii-overview.json"
 
 # ---------------------------------------------------------------------------
 # Admin password

@@ -1,0 +1,16 @@
+apiVersion: 1
+
+providers:
+  - name: "mii-dashboards"
+    orgId: 1
+    folder: ""
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      # start.sh substitutes this with the real absolute path
+      # (data/grafana-provisioning/dashboards) at boot, since it differs
+      # per deployment location.
+      path: __DASHBOARDS_PATH__
+      foldersFromFilesStructure: false
