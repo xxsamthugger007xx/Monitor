@@ -9,167 +9,250 @@
   "time": { "from": "now-6h", "to": "now" },
   "tags": ["mii"],
   "panels": [
+    { "id": 100, "type": "row", "title": "Overview", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 }, "collapsed": false, "panels": [] },
+
     {
       "id": 1,
-      "title": "mii-backend up",
+      "title": "mii-backend",
       "type": "stat",
-      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 0 },
+      "gridPos": { "h": 6, "w": 4, "x": 0, "y": 1 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "targets": [
-        { "expr": "max(up{job=\"mii-backend\"})", "refId": "A" }
-      ],
+      "targets": [{ "expr": "max(up{job=\"mii-backend\"})", "refId": "A" }],
       "fieldConfig": {
         "defaults": {
           "mappings": [
             { "type": "value", "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } } }
           ],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] }
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] },
+          "custom": { "graphMode": "none" }
         },
         "overrides": []
       },
-      "options": { "colorMode": "background", "graphMode": "none", "textMode": "value" }
+      "options": { "colorMode": "background", "graphMode": "none", "textMode": "value", "justifyMode": "auto", "reduceOptions": { "calcs": ["lastNotNull"] } }
     },
     {
       "id": 2,
-      "title": "Total request rate (req/s)",
+      "title": "Request rate",
       "type": "stat",
-      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 0 },
+      "gridPos": { "h": 6, "w": 5, "x": 4, "y": 1 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "targets": [
-        { "expr": "sum(rate(http_requests_total{job=\"mii-backend\"}[5m]))", "refId": "A" }
-      ],
-      "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
-      "options": { "colorMode": "value", "graphMode": "area", "textMode": "value" }
-    },
-    {
-      "id": 3,
-      "title": "Error rate (5xx, req/s)",
-      "type": "stat",
-      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 0 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "targets": [
-        { "expr": "sum(rate(http_requests_total{job=\"mii-backend\",status_code=~\"5..\"}[5m]))", "refId": "A" }
-      ],
+      "targets": [{ "expr": "sum(rate(http_requests_total{job=\"mii-backend\"}[5m]))", "refId": "A" }],
       "fieldConfig": {
         "defaults": {
           "unit": "reqps",
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 0.1 }] }
+          "color": { "mode": "fixed", "fixedColor": "blue" },
+          "custom": { "fillOpacity": 20, "lineWidth": 2 }
         },
         "overrides": []
       },
-      "options": { "colorMode": "value", "graphMode": "area", "textMode": "value" }
+      "options": { "colorMode": "value", "graphMode": "area", "textMode": "value", "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "id": 3,
+      "title": "Error rate (5xx)",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 5, "x": 9, "y": 1 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "expr": "sum(rate(http_requests_total{job=\"mii-backend\",status_code=~\"5..\"}[5m])) or vector(0)", "refId": "A" }],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 0.1 }] },
+          "custom": { "fillOpacity": 20, "lineWidth": 2 }
+        },
+        "overrides": []
+      },
+      "options": { "colorMode": "value", "graphMode": "area", "textMode": "value", "reduceOptions": { "calcs": ["lastNotNull"] } }
     },
     {
       "id": 4,
-      "title": "Active WebSocket connections",
-      "type": "stat",
-      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 0 },
+      "title": "p95 latency",
+      "type": "gauge",
+      "gridPos": { "h": 6, "w": 5, "x": 14, "y": 1 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
-        { "expr": "sum(websocket_active_connections{job=\"mii-backend\"})", "refId": "A" }
+        { "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job=\"mii-backend\"}[5m])) by (le))", "refId": "A" }
       ],
-      "fieldConfig": { "defaults": {}, "overrides": [] },
-      "options": { "colorMode": "value", "graphMode": "area", "textMode": "value" }
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "min": 0,
+          "max": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.3 },
+              { "color": "red", "value": 0.8 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": { "showThresholdLabels": false, "showThresholdMarkers": true, "reduceOptions": { "calcs": ["lastNotNull"] } }
     },
     {
       "id": 5,
-      "title": "Dispatch success (total)",
+      "title": "Active WebSocket conns",
       "type": "stat",
-      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 0 },
+      "gridPos": { "h": 6, "w": 5, "x": 19, "y": 1 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "targets": [
-        { "expr": "dispatch_success_total{job=\"mii-backend\"}", "refId": "A" }
-      ],
-      "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "green" } }, "overrides": [] },
-      "options": { "colorMode": "value", "graphMode": "area", "textMode": "value" }
+      "targets": [{ "expr": "sum(websocket_active_connections{job=\"mii-backend\"}) or vector(0)", "refId": "A" }],
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "fixed", "fixedColor": "purple" }, "custom": { "fillOpacity": 20, "lineWidth": 2 } },
+        "overrides": []
+      },
+      "options": { "colorMode": "value", "graphMode": "area", "textMode": "value", "reduceOptions": { "calcs": ["lastNotNull"] } }
     },
+
+    { "id": 101, "type": "row", "title": "HTTP performance", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 7 }, "collapsed": false, "panels": [] },
+
     {
       "id": 6,
-      "title": "Dispatch failure (total)",
-      "type": "stat",
-      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 0 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "targets": [
-        { "expr": "dispatch_failure_total{job=\"mii-backend\"}", "refId": "A" }
-      ],
-      "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "red" } }, "overrides": [] },
-      "options": { "colorMode": "value", "graphMode": "area", "textMode": "value" }
-    },
-    {
-      "id": 7,
-      "title": "HTTP request rate by route",
+      "title": "Request rate by route",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 8 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         { "expr": "sum(rate(http_requests_total{job=\"mii-backend\"}[5m])) by (route)", "refId": "A", "legendFormat": "{{route}}" }
       ],
-      "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
-      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "fillOpacity": 15,
+            "lineWidth": 2,
+            "lineInterpolation": "smooth",
+            "gradientMode": "opacity",
+            "spanNulls": true,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max"] },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      }
     },
     {
-      "id": 8,
-      "title": "HTTP request duration p50 / p95 / p99",
+      "id": 7,
+      "title": "Latency percentiles",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 8 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         { "expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket{job=\"mii-backend\"}[5m])) by (le))", "refId": "A", "legendFormat": "p50" },
         { "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job=\"mii-backend\"}[5m])) by (le))", "refId": "B", "legendFormat": "p95" },
         { "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{job=\"mii-backend\"}[5m])) by (le))", "refId": "C", "legendFormat": "p99" }
       ],
-      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
-      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {
+            "fillOpacity": 15,
+            "lineWidth": 2,
+            "lineInterpolation": "smooth",
+            "gradientMode": "opacity",
+            "spanNulls": true,
+            "showPoints": "never"
+          }
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "p50" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "green" } }] },
+          { "matcher": { "id": "byName", "options": "p95" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "yellow" } }] },
+          { "matcher": { "id": "byName", "options": "p99" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }] }
+        ]
+      },
+      "options": {
+        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max"] },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      }
+    },
+
+    { "id": 102, "type": "row", "title": "Dispatch & payments", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 17 }, "collapsed": false, "panels": [] },
+
+    {
+      "id": 8,
+      "title": "Dispatch success (total)",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 18 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "expr": "dispatch_success_total{job=\"mii-backend\"} or vector(0)", "refId": "A" }],
+      "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "green" } }, "overrides": [] },
+      "options": { "colorMode": "value", "graphMode": "area", "textMode": "value", "reduceOptions": { "calcs": ["lastNotNull"] } }
     },
     {
       "id": 9,
+      "title": "Dispatch failure (total)",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 18 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "expr": "dispatch_failure_total{job=\"mii-backend\"} or vector(0)", "refId": "A" }],
+      "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "red" } }, "overrides": [] },
+      "options": { "colorMode": "value", "graphMode": "area", "textMode": "value", "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "id": 10,
       "title": "Dispatch success vs failure (rate)",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "gridPos": { "h": 9, "w": 16, "x": 8, "y": 18 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         { "expr": "rate(dispatch_success_total{job=\"mii-backend\"}[15m])", "refId": "A", "legendFormat": "success" },
         { "expr": "rate(dispatch_failure_total{job=\"mii-backend\"}[15m])", "refId": "B", "legendFormat": "failure" }
       ],
       "fieldConfig": {
-        "defaults": {},
+        "defaults": {
+          "custom": { "fillOpacity": 20, "lineWidth": 2, "lineInterpolation": "smooth", "gradientMode": "opacity", "spanNulls": true, "showPoints": "never" }
+        },
         "overrides": [
           { "matcher": { "id": "byName", "options": "success" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "green" } }] },
           { "matcher": { "id": "byName", "options": "failure" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }] }
         ]
       },
-      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
-    },
-    {
-      "id": 10,
-      "title": "WebSocket connections by channel",
-      "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "targets": [
-        { "expr": "websocket_active_connections{job=\"mii-backend\"}", "refId": "A", "legendFormat": "{{channel}}" }
-      ],
-      "fieldConfig": { "defaults": {}, "overrides": [] },
-      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi", "sort": "desc" } }
     },
     {
       "id": 11,
       "title": "Payment webhooks by outcome (rate)",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 20 },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 27 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         { "expr": "sum(rate(payment_webhook_total{job=\"mii-backend\"}[15m])) by (outcome)", "refId": "A", "legendFormat": "{{outcome}}" }
       ],
       "fieldConfig": {
-        "defaults": {},
+        "defaults": {
+          "custom": { "fillOpacity": 20, "lineWidth": 2, "lineInterpolation": "smooth", "gradientMode": "opacity", "spanNulls": true, "showPoints": "never" }
+        },
         "overrides": [
           { "matcher": { "id": "byName", "options": "success" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "green" } }] },
           { "matcher": { "id": "byName", "options": "duplicate" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "yellow" } }] },
           { "matcher": { "id": "byName", "options": "failure" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }] }
         ]
       },
-      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi", "sort": "desc" } }
+    },
+
+    { "id": 103, "type": "row", "title": "WebSocket connections", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 35 }, "collapsed": false, "panels": [] },
+
+    {
+      "id": 12,
+      "title": "Connections by channel",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 36 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "websocket_active_connections{job=\"mii-backend\"}", "refId": "A", "legendFormat": "{{channel}}" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "fillOpacity": 20, "lineWidth": 2, "lineInterpolation": "smooth", "gradientMode": "opacity", "spanNulls": true, "showPoints": "never" }
+        },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi", "sort": "desc" } }
     }
   ]
 }
