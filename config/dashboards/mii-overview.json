@@ -178,7 +178,7 @@
       "type": "stat",
       "gridPos": { "h": 4, "w": 4, "x": 0, "y": 18 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "targets": [{ "expr": "dispatch_success_total{job=\"mii-backend\"} or vector(0)", "refId": "A" }],
+      "targets": [{ "expr": "sum(dispatch_success_total{job=\"mii-backend\"}) or vector(0)", "refId": "A" }],
       "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "green" } }, "overrides": [] },
       "options": { "colorMode": "value", "graphMode": "area", "textMode": "value", "reduceOptions": { "calcs": ["lastNotNull"] } }
     },
@@ -188,7 +188,7 @@
       "type": "stat",
       "gridPos": { "h": 4, "w": 4, "x": 4, "y": 18 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "targets": [{ "expr": "dispatch_failure_total{job=\"mii-backend\"} or vector(0)", "refId": "A" }],
+      "targets": [{ "expr": "sum(dispatch_failure_total{job=\"mii-backend\"}) or vector(0)", "refId": "A" }],
       "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "red" } }, "overrides": [] },
       "options": { "colorMode": "value", "graphMode": "area", "textMode": "value", "reduceOptions": { "calcs": ["lastNotNull"] } }
     },
@@ -199,8 +199,8 @@
       "gridPos": { "h": 9, "w": 16, "x": 8, "y": 18 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
-        { "expr": "rate(dispatch_success_total{job=\"mii-backend\"}[15m])", "refId": "A", "legendFormat": "success" },
-        { "expr": "rate(dispatch_failure_total{job=\"mii-backend\"}[15m])", "refId": "B", "legendFormat": "failure" }
+        { "expr": "sum(rate(dispatch_success_total{job=\"mii-backend\"}[15m]))", "refId": "A", "legendFormat": "success" },
+        { "expr": "sum(rate(dispatch_failure_total{job=\"mii-backend\"}[15m]))", "refId": "B", "legendFormat": "failure" }
       ],
       "fieldConfig": {
         "defaults": {
@@ -244,7 +244,7 @@
       "gridPos": { "h": 8, "w": 24, "x": 0, "y": 36 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
-        { "expr": "websocket_active_connections{job=\"mii-backend\"}", "refId": "A", "legendFormat": "{{channel}}" }
+        { "expr": "sum(websocket_active_connections{job=\"mii-backend\"}) by (channel)", "refId": "A", "legendFormat": "{{channel}}" }
       ],
       "fieldConfig": {
         "defaults": {
