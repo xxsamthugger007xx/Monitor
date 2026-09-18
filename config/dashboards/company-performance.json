@@ -1,0 +1,334 @@
+{
+  "title": "Company Performance",
+  "uid": "mii-company-performance",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "timezone": "browser",
+  "refresh": "5m",
+  "time": { "from": "now-30d", "to": "now" },
+  "tags": ["mii", "business"],
+  "panels": [
+    {
+      "id": 1,
+      "title": "Total Revenue",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "datasource": { "type": "postgres", "uid": "efylkw545gwzkf" },
+      "targets": [
+        {
+          "rawSql": "SELECT COALESCE(SUM(total_price + COALESCE(convenience_fee, 0)), 0) AS revenue FROM hourly_bookings WHERE payment_status IN ('SUCCESS','COMPLETED') AND $__timeFilter(created_at)",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "currencyINR", "color": { "mode": "fixed", "fixedColor": "green" } },
+        "overrides": []
+      },
+      "options": { "colorMode": "background", "graphMode": "none", "textMode": "value", "justifyMode": "center", "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "id": 2,
+      "title": "Paid Bookings",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "datasource": { "type": "postgres", "uid": "efylkw545gwzkf" },
+      "targets": [
+        {
+          "rawSql": "SELECT COUNT(*) AS paid_bookings FROM hourly_bookings WHERE payment_status IN ('SUCCESS','COMPLETED') AND $__timeFilter(created_at)",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "blue" } }, "overrides": [] },
+      "options": { "colorMode": "background", "graphMode": "none", "textMode": "value", "justifyMode": "center", "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "id": 3,
+      "title": "Total Bookings Created",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "datasource": { "type": "postgres", "uid": "efylkw545gwzkf" },
+      "targets": [
+        {
+          "rawSql": "SELECT COUNT(*) AS total_bookings FROM hourly_bookings WHERE $__timeFilter(created_at)",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "purple" } }, "overrides": [] },
+      "options": { "colorMode": "background", "graphMode": "none", "textMode": "value", "justifyMode": "center", "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "id": 4,
+      "title": "Average Booking Value",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+      "datasource": { "type": "postgres", "uid": "efylkw545gwzkf" },
+      "targets": [
+        {
+          "rawSql": "SELECT COALESCE(AVG(total_price + COALESCE(convenience_fee, 0)), 0) AS avg_value FROM hourly_bookings WHERE payment_status IN ('SUCCESS','COMPLETED') AND $__timeFilter(created_at)",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "currencyINR", "color": { "mode": "fixed", "fixedColor": "orange" } }, "overrides": [] },
+      "options": { "colorMode": "background", "graphMode": "none", "textMode": "value", "justifyMode": "center", "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+
+    {
+      "id": 5,
+      "title": "Revenue by day",
+      "type": "barchart",
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 4 },
+      "datasource": { "type": "postgres", "uid": "efylkw545gwzkf" },
+      "targets": [
+        {
+          "rawSql": "SELECT $__timeGroup(created_at, '1d') AS time, COALESCE(SUM(total_price + COALESCE(convenience_fee, 0)), 0) AS revenue FROM hourly_bookings WHERE payment_status IN ('SUCCESS','COMPLETED') AND $__timeFilter(created_at) GROUP BY 1 ORDER BY 1",
+          "format": "time_series",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "currencyINR", "color": { "mode": "fixed", "fixedColor": "green" }, "custom": { "fillOpacity": 70, "lineWidth": 0 } },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "single" } }
+    },
+    {
+      "id": 6,
+      "title": "Bookings created by day",
+      "type": "barchart",
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 4 },
+      "datasource": { "type": "postgres", "uid": "efylkw545gwzkf" },
+      "targets": [
+        {
+          "rawSql": "SELECT $__timeGroup(created_at, '1d') AS time, COUNT(*) AS bookings FROM hourly_bookings WHERE $__timeFilter(created_at) GROUP BY 1 ORDER BY 1",
+          "format": "time_series",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "fixed", "fixedColor": "purple" }, "custom": { "fillOpacity": 70, "lineWidth": 0 } },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "single" } }
+    },
+
+    {
+      "id": 9,
+      "title": "Payment Conversion Rate",
+      "type": "gauge",
+      "gridPos": { "h": 7, "w": 8, "x": 0, "y": 11 },
+      "datasource": { "type": "postgres", "uid": "efylkw545gwzkf" },
+      "targets": [
+        {
+          "rawSql": "SELECT CASE WHEN COUNT(*) = 0 THEN 0 ELSE 100.0 * COUNT(*) FILTER (WHERE payment_status IN ('SUCCESS','COMPLETED')) / COUNT(*) END AS conversion_rate FROM hourly_bookings WHERE $__timeFilter(created_at)",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 40 },
+              { "color": "green", "value": 70 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": { "showThresholdLabels": false, "showThresholdMarkers": true, "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "id": 7,
+      "title": "Bookings by status",
+      "type": "piechart",
+      "gridPos": { "h": 7, "w": 8, "x": 8, "y": 11 },
+      "datasource": { "type": "postgres", "uid": "efylkw545gwzkf" },
+      "targets": [
+        {
+          "rawSql": "SELECT COALESCE(status, 'unknown') AS status, COUNT(*) AS count FROM hourly_bookings WHERE $__timeFilter(created_at) GROUP BY status ORDER BY count DESC",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "pieType": "donut",
+        "displayLabels": ["percent"],
+        "legend": { "displayMode": "table", "placement": "bottom", "values": ["value", "percent"] }
+      }
+    },
+    {
+      "id": 8,
+      "title": "Bookings by service type",
+      "type": "piechart",
+      "gridPos": { "h": 7, "w": 8, "x": 16, "y": 11 },
+      "datasource": { "type": "postgres", "uid": "efylkw545gwzkf" },
+      "targets": [
+        {
+          "rawSql": "SELECT COALESCE(service_type, 'unknown') AS service_type, COUNT(*) AS count FROM hourly_bookings WHERE $__timeFilter(created_at) GROUP BY service_type ORDER BY count DESC",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "pieType": "donut",
+        "displayLabels": ["percent"],
+        "legend": { "displayMode": "table", "placement": "bottom", "values": ["value", "percent"] }
+      }
+    },
+
+    { "id": 200, "type": "row", "title": "Customer & Quality", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 18 }, "collapsed": false, "panels": [] },
+
+    {
+      "id": 10,
+      "title": "Cancellation Rate",
+      "type": "gauge",
+      "gridPos": { "h": 7, "w": 8, "x": 0, "y": 19 },
+      "datasource": { "type": "postgres", "uid": "efylkw545gwzkf" },
+      "targets": [
+        {
+          "rawSql": "SELECT CASE WHEN COUNT(*) = 0 THEN 0 ELSE 100.0 * COUNT(*) FILTER (WHERE status = 'CANCELLED') / COUNT(*) END AS cancellation_rate FROM hourly_bookings WHERE $__timeFilter(created_at)",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 10 },
+              { "color": "red", "value": 25 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": { "showThresholdLabels": false, "showThresholdMarkers": true, "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "id": 11,
+      "title": "Escalated Bookings (no worker found)",
+      "type": "stat",
+      "gridPos": { "h": 7, "w": 8, "x": 8, "y": 19 },
+      "datasource": { "type": "postgres", "uid": "efylkw545gwzkf" },
+      "targets": [
+        {
+          "rawSql": "SELECT COUNT(*) AS escalated FROM hourly_bookings WHERE status = 'ESCALATED' AND $__timeFilter(created_at)",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "red" } }, "overrides": [] },
+      "options": { "colorMode": "background", "graphMode": "none", "textMode": "value", "justifyMode": "center", "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "id": 12,
+      "title": "New vs Repeat Customers",
+      "type": "piechart",
+      "gridPos": { "h": 7, "w": 8, "x": 16, "y": 19 },
+      "datasource": { "type": "postgres", "uid": "efylkw545gwzkf" },
+      "targets": [
+        {
+          "rawSql": "WITH ranked AS (SELECT user_id, created_at, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at) AS rn FROM hourly_bookings WHERE user_id IS NOT NULL) SELECT CASE WHEN rn = 1 THEN 'new' ELSE 'repeat' END AS customer_type, COUNT(*) AS count FROM ranked WHERE created_at >= $__timeFrom() AND created_at <= $__timeTo() GROUP BY customer_type",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "pieType": "donut",
+        "displayLabels": ["percent"],
+        "legend": { "displayMode": "table", "placement": "bottom", "values": ["value", "percent"] }
+      }
+    },
+
+    { "id": 201, "type": "row", "title": "Revenue & Location Breakdown", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 26 }, "collapsed": false, "panels": [] },
+
+    {
+      "id": 13,
+      "title": "Revenue by service type",
+      "type": "barchart",
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 27 },
+      "datasource": { "type": "postgres", "uid": "efylkw545gwzkf" },
+      "targets": [
+        {
+          "rawSql": "SELECT COALESCE(service_type, 'unknown') AS service_type, COALESCE(SUM(total_price + COALESCE(convenience_fee, 0)), 0) AS revenue FROM hourly_bookings WHERE payment_status IN ('SUCCESS','COMPLETED') AND $__timeFilter(created_at) GROUP BY service_type ORDER BY revenue DESC",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "currencyINR", "color": { "mode": "fixed", "fixedColor": "green" }, "custom": { "fillOpacity": 70, "lineWidth": 0 } },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "single" } }
+    },
+    {
+      "id": 14,
+      "title": "Top 10 locations by booking volume",
+      "type": "barchart",
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 27 },
+      "datasource": { "type": "postgres", "uid": "efylkw545gwzkf" },
+      "targets": [
+        {
+          "rawSql": "SELECT pincode, COUNT(*) AS bookings FROM hourly_bookings WHERE $__timeFilter(created_at) GROUP BY pincode ORDER BY bookings DESC LIMIT 10",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "fixed", "fixedColor": "blue" }, "custom": { "fillOpacity": 70, "lineWidth": 0 } },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "single" } }
+    },
+
+    { "id": 202, "type": "row", "title": "Workforce", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 34 }, "collapsed": false, "panels": [] },
+
+    {
+      "id": 15,
+      "title": "Active Workers (assigned a job)",
+      "type": "stat",
+      "gridPos": { "h": 5, "w": 12, "x": 0, "y": 35 },
+      "datasource": { "type": "postgres", "uid": "efylkw545gwzkf" },
+      "targets": [
+        {
+          "rawSql": "SELECT COUNT(DISTINCT assigned_worker_id) AS active_workers FROM hourly_bookings WHERE assigned_worker_id IS NOT NULL AND $__timeFilter(created_at)",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "blue" } }, "overrides": [] },
+      "options": { "colorMode": "background", "graphMode": "none", "textMode": "value", "justifyMode": "center", "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "id": 16,
+      "title": "Total Active Workers (registered)",
+      "type": "stat",
+      "gridPos": { "h": 5, "w": 12, "x": 12, "y": 35 },
+      "datasource": { "type": "postgres", "uid": "efylkw545gwzkf" },
+      "targets": [
+        {
+          "rawSql": "SELECT COUNT(*) AS total_active_workers FROM workers WHERE is_active = true",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "purple" } }, "overrides": [] },
+      "options": { "colorMode": "background", "graphMode": "none", "textMode": "value", "justifyMode": "center", "reduceOptions": { "calcs": ["lastNotNull"] } }
+    }
+  ]
+}
